@@ -1,0 +1,13 @@
+{
+  "name": "dohna-ns",
+  "version": "1.0.0",
+  "description": "Another DNS over HTTPS recursive resolver.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LittleChest/Dohna-NS.git"
+  },
+  "author": "LittleChest",
+  "license": "AGPL-3.0-or-later",
+  "homepage": "https://dohna-ns.sbs/",
+  "private": true
+}
