@@ -12,3 +12,6 @@ yarn.lock
 
 # Vercel
 .vercel
+
+# Netlify
+.netlify

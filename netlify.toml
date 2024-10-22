@@ -1,0 +1,3 @@
+[build]
+  command = "mkdir publish"
+  publish = "publish"
