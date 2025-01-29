@@ -1,6 +1,6 @@
 {
   "name": "dohna-ns",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Another DNS over HTTPS recursive resolver.",
   "repository": {
     "type": "git",
