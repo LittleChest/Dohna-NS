@@ -1,0 +1,7 @@
+{
+  "installCommand": "mkdir publish",
+  "buildCommand": "echo 1 > ./publish/index",
+  "outputDirectory": "publish",
+  "public": false,
+  "trailingSlash": false
+}

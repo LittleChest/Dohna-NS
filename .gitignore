@@ -9,3 +9,6 @@ pnpm-lock.yaml
 
 # Yarn
 yarn.lock
+
+# Vercel
+.vercel
