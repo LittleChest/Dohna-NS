@@ -1,5 +1,5 @@
 import handler from "./common";
 
 export default {
-  fetch: async (request) => handler(request),
+  fetch: async (request, env) => handler(request, env.DNS, env.API),
 };

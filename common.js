@@ -1,7 +1,8 @@
-const dns = "https://dns.google/dns-query";
-const api = "https://dns.google/resolve";
-
-export default async function handler(request) {
+export default async function handler(
+  request,
+  dns = "https://dns.google/dns-query",
+  api = "https://dns.google/resolve"
+) {
   const { method, headers, url } = request;
   const { search, searchParams, pathname } = new URL(url);
   const ip = headers.get("x-forwarded-for");
@@ -57,14 +58,14 @@ export default async function handler(request) {
     }
 
     if (queryData !== undefined) {
-      res = await queryDns(queryData, ip);
+      res = await queryDns(queryData, ip, dns);
     }
   }
 
   return res;
 }
 
-async function queryDns(queryData, ip) {
+async function queryDns(queryData, ip, dns) {
   const hasOptRecord = checkForOptRecord(queryData);
   let newQueryData = queryData;
   if (!hasOptRecord && ip) {
