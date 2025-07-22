@@ -31,7 +31,7 @@ export default async function handler(
       res = fetch(api + search, {
         method: "GET",
         headers: {
-          Accept: "application/dns-json",
+          "User-Agent": "Dohna-NS (https://github.com/LittleChest/Dohna-NS)",
         },
       });
     }
@@ -88,6 +88,9 @@ async function queryDns(queryData, ip, dns) {
     method: "POST",
     headers: {
       "Content-Type": "application/dns-message",
+      Accept: "application/dns-message",
+      "User-Agent": "Dohna-NS (https://github.com/LittleChest/Dohna-NS)",
+      "X-Forwarded-For": ip,
     },
     body: newQueryData,
   });
