@@ -13,8 +13,9 @@ export default async function handler(
     pathname === "/dns-query" &&
     headers.get("content-type") === "application/dns-message" &&
     headers.get("accept") === "application/dns-message" &&
-    headers.get("accept-encoding") === "gzip, br" &&
     headers.get("content-length") === "29" &&
+    (headers.get("accept-encoding") === "gzip, br" ||
+      headers.get("accept-encoding") === "gzip") &&
     (headers.get("user-agent") === "Go-http-client/1.1" ||
       headers.get("user-agent") === "Go-http-client/2.0")
   ) {
