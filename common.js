@@ -12,28 +12,6 @@ export default async function handler(
     headers.get("x-forwarded-for").split(",")[0].trim() ||
     headers.get("x-real-ip");
 
-  const bodyHex = Array.from(new Uint8Array(await request.arrayBuffer()))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-
-  // Anti-GFW
-  if (
-    isIPv4(ip) &&
-    method === "POST" &&
-    pathname === "/dns-query" &&
-    headers.get("content-type") === "application/dns-message" &&
-    headers.get("accept") === "application/dns-message" &&
-    headers.get("content-length") === "29" &&
-    (headers.get("user-agent") === "Go-http-client/1.1" ||
-      headers.get("user-agent") === "Go-http-client/2.0") &&
-    (headers.get("accept-encoding") === "gzip, br" ||
-      headers.get("accept-encoding") === "gzip") &&
-    bodyHex.slice(4) ===
-      "01100001000000000000077477697474657203636f6d0000010001"
-  ) {
-    return new Response(null, { status: 403 });
-  }
-
   let res = new Response(null, { status: 404 });
 
   // JSON API
@@ -71,8 +49,27 @@ export default async function handler(
       method === "POST" &&
       headers.get("content-type") === "application/dns-message"
     ) {
-      const originalQuery = await request.arrayBuffer();
-      queryData = new Uint8Array(originalQuery);
+      const requestBody = await request.arrayBuffer();
+
+      const bodyHex = Array.from(new Uint8Array(requestBody))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      // Anti-GFW
+      if (
+        isIPv4(ip) &&
+        headers.get("accept") === "application/dns-message" &&
+        headers.get("content-length") === "29" &&
+        (headers.get("user-agent") === "Go-http-client/1.1" ||
+          headers.get("user-agent") === "Go-http-client/2.0") &&
+        (headers.get("accept-encoding") === "gzip, br" ||
+          headers.get("accept-encoding") === "gzip") &&
+        bodyHex.slice(4) ===
+          "01100001000000000000077477697474657203636f6d0000010001"
+      ) {
+        return new Response(null, { status: 403 });
+      }
+      queryData = new Uint8Array(requestBody);
     }
 
     if (queryData !== undefined) {
