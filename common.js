@@ -51,10 +51,6 @@ export default async function handler(
     ) {
       const requestBody = await request.arrayBuffer();
 
-      const bodyHex = Array.from(new Uint8Array(requestBody))
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-
       // Anti-GFW
       if (
         isIPv4(ip) &&
@@ -63,11 +59,17 @@ export default async function handler(
         (headers.get("user-agent") === "Go-http-client/1.1" ||
           headers.get("user-agent") === "Go-http-client/2.0") &&
         (headers.get("accept-encoding") === "gzip, br" ||
-          headers.get("accept-encoding") === "gzip") &&
-        bodyHex.slice(4) ===
-          "01100001000000000000077477697474657203636f6d0000010001"
+          headers.get("accept-encoding") === "gzip")
       ) {
-        return new Response(null, { status: 403 });
+        const bodyHex = Array.from(new Uint8Array(requestBody))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+        if (
+          bodyHex.slice(4) ===
+          "01100001000000000000077477697474657203636f6d0000010001"
+        ) {
+          return new Response(null, { status: 403 });
+        }
       }
       queryData = new Uint8Array(requestBody);
     }
