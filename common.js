@@ -1,11 +1,16 @@
 export default async function handler(
   request,
   dns = "https://dns.google/dns-query",
-  api = "https://dns.google/resolve"
+  api = "https://dns.google/resolve",
+  rawIP
 ) {
   const { method, headers, url } = request;
   const { search, searchParams, pathname } = new URL(url);
-  const ip = headers.get("x-forwarded-for");
+
+  const ip =
+    rawIP ||
+    headers.get("x-forwarded-for").split(",")[0].trim() ||
+    headers.get("x-real-ip");
 
   // Anti-GFW
   if (
