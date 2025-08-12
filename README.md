@@ -7,7 +7,7 @@ Another DNS over HTTPS recursive resolver.
 
 ## For Users
 
-Read [Dohna NS Documentation](https://dohna-ns.sbs/) to learn how to install Dohna NS on your device.
+Read [Dohna NS Documentation](https://dohna.ovh/) to learn how to install Dohna NS on your device.
 
 ## Deploy
 
@@ -30,4 +30,4 @@ You can use [Netlify CLI](https://cli.netlify.com/commands/serve/) or [`workerd`
 
 Make sure you can connect to upstream servers.
 
-If you find a bug on self-hosted, try to reproduce it at `dohna-ns.sbs` before reporting it.
+If you find a bug on self-hosted, try to reproduce it at `dohna.ovh` before reporting it.
