@@ -2,6 +2,8 @@ export default async function handler(
   request,
   dns = "https://dns.google/dns-query",
   api = "https://dns.google/resolve",
+  ipv4Prefix = 32,
+  ipv6Prefix = 128,
   rawIP
 ) {
   const { method, headers, url } = request;
@@ -75,14 +77,14 @@ export default async function handler(
     }
 
     if (queryData !== undefined) {
-      res = await queryDns(queryData, ip, dns);
+      res = await queryDns(queryData, ip, dns, ipv4Prefix, ipv6Prefix);
     }
   }
 
   return res;
 }
 
-async function queryDns(queryData, ip, dns) {
+async function queryDns(queryData, ip, dns, ipv4Prefix, ipv6Prefix) {
   const hasOptRecord = checkForOptRecord(queryData);
   let newQueryData = queryData;
   if (!hasOptRecord && ip) {
@@ -90,7 +92,7 @@ async function queryDns(queryData, ip, dns) {
     const [headerAndQuestion] = extractHeaderAndQuestion(queryData);
 
     // Construct a new OPT record with ECS option
-    const optRecord = createOptRecord(ip);
+    const optRecord = createOptRecord(ip, ipv4Prefix, ipv6Prefix);
 
     // Combine the header, question, and new OPT record to create a new query
     newQueryData = combineQueryData(headerAndQuestion, optRecord);
@@ -172,21 +174,21 @@ function extractHeaderAndQuestion(data) {
   return [headerAndQuestion, offset];
 }
 
-function createOptRecord(ip) {
+function createOptRecord(ip, ipv4Prefix, ipv6Prefix) {
   let ecsData;
   let family;
 
   if (isIPv4(ip)) {
+    const prefixLength = ipv4Prefix
     // Convert client IP to bytes
     const ipParts = ip.split(".").map((part) => parseInt(part, 10));
     family = 1; // IPv4
-    const prefixLength = 32; // Adjust the prefix length as needed
     ecsData = [0, 8, 0, 8, 0, family, prefixLength, 0, ...ipParts];
   } else if (isIPv6(ip)) {
+    const prefixLength = ipv6Prefix
     // Convert client IP to bytes
     const ipParts = ipv6ToBytes(ip);
     family = 2; // IPv6
-    const prefixLength = 128; // Adjust the prefix length as needed
     ecsData = [0, 8, 0, 20, 0, family, prefixLength, 0, ...ipParts];
   } else {
     throw new Error("Invalid IP address");

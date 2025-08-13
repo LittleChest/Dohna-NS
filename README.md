@@ -19,10 +19,12 @@ Read [Dohna NS Documentation](https://dohna.ovh/) to learn how to install Dohna 
 
 ## Environment Variables
 
-| Key | Default                      | Description                                      |
-| --- | ---------------------------- | ------------------------------------------------ |
-| DNS | https://dns.google/dns-query | Specify a DNS over HTTPS server as the upstream. |
-| API | https://dns.google/resolve   | Specify a JSON API server as the upstream.       |
+| Key         | Default                      | Description                                        |
+| ----------- | ---------------------------- | -------------------------------------------------- |
+| DNS         | https://dns.google/dns-query | Specify a DNS over HTTPS server as the upstream.   |
+| API         | https://dns.google/resolve   | Specify a JSON API server as the upstream.         |
+| IPV4_PREFIX | 32                           | Specify the EDNS client subnet IPv4 prefix length. |
+| IPV6_PREFIX | 128                          | Specify the EDNS client subnet IPv6 prefix length. |
 
 ## Self-hosted
 
