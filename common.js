@@ -7,6 +7,13 @@ export default async function handler(
   rawIP,
 ) {
   const { method, headers, url } = request;
+
+  const host = headers.get("Host");
+
+  if (host && (host.endsWith(":443") || host.endsWith(":80"))) {
+    return new Response(null, { status: 403 });
+  }
+
   const { search, searchParams, pathname } = new URL(url);
 
   const ip =
