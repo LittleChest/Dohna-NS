@@ -4,7 +4,7 @@ export default async function handler(
   api = "https://dns.google/resolve",
   ipv4Prefix = 32,
   ipv6Prefix = 128,
-  rawIP
+  rawIP,
 ) {
   const { method, headers, url } = request;
   const { search, searchParams, pathname } = new URL(url);
@@ -39,11 +39,13 @@ export default async function handler(
     // GET
     if (method === "GET" && searchParams.has("dns")) {
       // Decode the base64-encoded DNS query
-      const decodedQuery = atob(searchParams.get("dns"));
-      queryData = new Uint8Array(decodedQuery.length);
-      for (let i = 0; i < decodedQuery.length; i++) {
-        queryData[i] = decodedQuery.charCodeAt(i);
-      }
+      try {
+        const decodedQuery = atob(searchParams.get("dns"));
+        queryData = new Uint8Array(decodedQuery.length);
+        for (let i = 0; i < decodedQuery.length; i++) {
+          queryData[i] = decodedQuery.charCodeAt(i);
+        }
+      } catch {}
     }
 
     // POST
@@ -179,13 +181,13 @@ function createOptRecord(ip, ipv4Prefix, ipv6Prefix) {
   let family;
 
   if (isIPv4(ip)) {
-    const prefixLength = ipv4Prefix
+    const prefixLength = ipv4Prefix;
     // Convert client IP to bytes
     const ipParts = ip.split(".").map((part) => parseInt(part, 10));
     family = 1; // IPv4
     ecsData = [0, 8, 0, 8, 0, family, prefixLength, 0, ...ipParts];
   } else if (isIPv6(ip)) {
-    const prefixLength = ipv6Prefix
+    const prefixLength = ipv6Prefix;
     // Convert client IP to bytes
     const ipParts = ipv6ToBytes(ip);
     family = 2; // IPv6
@@ -249,7 +251,7 @@ function ipv6ToBytes(ipv6) {
 function combineQueryData(headerAndQuestion, optRecord) {
   // Combine the header and question section with the new OPT record
   const newQueryData = new Uint8Array(
-    headerAndQuestion.length + optRecord.length
+    headerAndQuestion.length + optRecord.length,
   );
   newQueryData.set(headerAndQuestion, 0);
   newQueryData.set(optRecord, headerAndQuestion.length);
