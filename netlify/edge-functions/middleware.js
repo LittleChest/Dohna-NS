@@ -6,6 +6,7 @@ export default async (request) =>
     Netlify.env.get("API"),
     Netlify.env.get("IPV4_PREFIX"),
     Netlify.env.get("IPV6_PREFIX"),
-    Netlify.context.ip
+    Netlify.env.get("CONCURRENT"),
+    Netlify.context.ip,
   );
 export const config = { path: "*" };

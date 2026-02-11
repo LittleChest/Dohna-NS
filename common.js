@@ -1,11 +1,47 @@
 export default async function handler(
   request,
-  dns = "https://dns.google/dns-query",
-  api = "https://dns.google/resolve",
+  dns,
+  api,
   ipv4Prefix = 32,
   ipv6Prefix = 128,
+  concurrent = false,
   rawIP,
 ) {
+  if (!dns || dns.length === 0) {
+    dns = [
+      "https://8.8.8.8/dns-query",
+      "https://8.8.4.4/dns-query",
+      "https://[2001:4860:4860::8888]/dns-query",
+      "https://[2001:4860:4860::8888]/dns-query",
+    ];
+  } else {
+    try {
+      dns = JSON.parse(dns.replace(/'/g, '"'));
+    } catch (e) {
+      console.warn(
+        `Unable to parse upstream DNS over HTTPS servers, using ${dns} as the only server.`,
+      );
+      dns = [dns];
+    }
+  }
+  if (!api || api.length === 0) {
+    api = [
+      "https://8.8.8.8/resolve",
+      "https://8.8.4.4/resolve",
+      "https://[2001:4860:4860::8888]/resolve",
+      "https://[2001:4860:4860::8888]/resolve",
+    ];
+  } else {
+    try {
+      api = JSON.parse(api.replace(/'/g, '"'));
+    } catch (e) {
+      console.warn(
+        `Unable to parse upstream JSON API servers, using ${api} as the only server.`,
+      );
+      api = [api];
+    }
+  }
+
   const { method, headers, url } = request;
 
   const host = headers.get("Host");
@@ -28,12 +64,40 @@ export default async function handler(
     res = new Response(null, { status: 400 });
 
     if (method === "GET" && searchParams.has("name")) {
-      res = fetch(api + search, {
-        method: "GET",
-        headers: {
-          "User-Agent": "Dohna-NS (https://github.com/LittleChest/Dohna-NS)",
-        },
-      });
+      if (concurrent) {
+        res = await Promise.any(
+          api.map((server) =>
+            fetch(server + search, {
+              method: "GET",
+              headers: {
+                "User-Agent":
+                  "Dohna-NS (https://github.com/LittleChest/Dohna-NS)",
+              },
+            }),
+          ),
+        );
+      } else {
+        const servers = [...api];
+        while (servers.length > 0) {
+          const index = Math.floor(Math.random() * servers.length);
+          const server = servers.splice(index, 1)[0];
+          try {
+            res = await fetch(server + search, {
+              method: "GET",
+              headers: {
+                "User-Agent":
+                  "Dohna-NS (https://github.com/LittleChest/Dohna-NS)",
+              },
+            });
+            break;
+          } catch (e) {
+            console.warn(`Failed to connect to ${server}: ${e.message}`);
+            continue;
+          }
+        }
+        console.error("All upstream JSON API servers failed.");
+        res = new Response(null, { status: 500 });
+      }
     }
   }
 
@@ -85,15 +149,29 @@ export default async function handler(
       queryData = new Uint8Array(requestBody);
     }
 
-    if (queryData !== undefined) {
-      res = await queryDns(queryData, ip, dns, ipv4Prefix, ipv6Prefix);
+    if (queryData) {
+      res = await queryDns(
+        queryData,
+        ip,
+        dns,
+        ipv4Prefix,
+        ipv6Prefix,
+        concurrent,
+      );
     }
   }
 
   return res;
 }
 
-async function queryDns(queryData, ip, dns, ipv4Prefix, ipv6Prefix) {
+async function queryDns(
+  queryData,
+  ip,
+  dns,
+  ipv4Prefix,
+  ipv6Prefix,
+  concurrent,
+) {
   const hasOptRecord = checkForOptRecord(queryData);
   let newQueryData = queryData;
   if (!hasOptRecord && ip) {
@@ -107,7 +185,35 @@ async function queryDns(queryData, ip, dns, ipv4Prefix, ipv6Prefix) {
     newQueryData = combineQueryData(headerAndQuestion, optRecord);
   }
 
-  const res = await fetch(dns, {
+  let res = new Response(null, { status: 500 });
+  if (concurrent) {
+    try {
+      res = await Promise.any(
+        dns.map((server) => fetchUpstream(server, ip, newQueryData)),
+      );
+    } catch (e) {
+      console.error("All upstream DNS over HTTPS servers failed: " + e.message);
+    }
+  } else {
+    const servers = [...dns];
+    while (servers.length > 0) {
+      const index = Math.floor(Math.random() * servers.length);
+      const server = servers.splice(index, 1)[0];
+      try {
+        res = await fetchUpstream(server, ip, newQueryData);
+        break;
+      } catch (e) {
+        console.warn(`Failed to connect to ${server}: ${e.message}`);
+        continue;
+      }
+    }
+    if (!res) console.error("All upstream DNS over HTTPS servers failed.");
+  }
+  return res;
+}
+
+function fetchUpstream(dns, ip, newQueryData) {
+  return fetch(dns, {
     method: "POST",
     headers: {
       "Content-Type": "application/dns-message",
@@ -117,8 +223,6 @@ async function queryDns(queryData, ip, dns, ipv4Prefix, ipv6Prefix) {
     },
     body: newQueryData,
   });
-
-  return res;
 }
 
 function checkForOptRecord(data) {

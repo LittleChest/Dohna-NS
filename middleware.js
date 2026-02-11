@@ -6,6 +6,7 @@ export default middleware = async (request) => {
     process.env.DNS,
     process.env.API,
     process.env.IPV4_PREFIX,
-    process.env.IPV6_PREFIX
+    process.env.IPV6_PREFIX,
+    process.env.CONCURRENT,
   );
 };

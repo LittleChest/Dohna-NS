@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD034 -->
+
 # Dohna NS
 
 Another DNS over HTTPS recursive resolver.
@@ -19,12 +21,13 @@ Read [Dohna NS Documentation](https://dohna.ovh/) to learn how to install Dohna 
 
 ## Environment Variables
 
-| Key         | Default                      | Description                                        |
-| ----------- | ---------------------------- | -------------------------------------------------- |
-| DNS         | https://dns.google/dns-query | Specify a DNS over HTTPS server as the upstream.   |
-| API         | https://dns.google/resolve   | Specify a JSON API server as the upstream.         |
-| IPV4_PREFIX | 32                           | Specify the EDNS client subnet IPv4 prefix length. |
-| IPV6_PREFIX | 128                          | Specify the EDNS client subnet IPv6 prefix length. |
+| Key         | Default                                                                                                                                         | Description                                                                 |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| DNS         | ["https://8.8.8.8/dns-query","https://8.8.4.4/dns-query","https://[2001:4860:4860::8888]/dns-query","https://[2001:4860:4860::8888]/dns-query"] | Specify a DNS over HTTPS server as the upstream.                            |
+| API         | ["https://8.8.8.8/resolve","https://8.8.4.4/resolve","https://[2001:4860:4860::8888]/resolve","https://[2001:4860:4860::8888]/resolve"]         | Specify a JSON API server as the upstream.                                  |
+| IPV4_PREFIX | 32                                                                                                                                              | Specify the EDNS client subnet IPv4 prefix length.                          |
+| IPV6_PREFIX | 128                                                                                                                                             | Specify the EDNS client subnet IPv6 prefix length.                          |
+| CONCURRENT  | false                                                                                                                                           | Whether it concurrently queries all servers and returns the fastest result. |
 
 ## Self-hosted
 

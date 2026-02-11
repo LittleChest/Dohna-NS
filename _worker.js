@@ -8,6 +8,7 @@ export default {
       env.API,
       env.IPV4_PREFIX,
       env.IPV6_PREFIX,
-      request.headers.get("cf-connecting-ip")
+      env.CONCURRENT,
+      request.headers.get("cf-connecting-ip"),
     ),
 };
