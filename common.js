@@ -122,19 +122,16 @@ export default async function handler(
     }
 
     // POST
-    if (
-      method === "POST" &&
-      headers.get("content-type") === "application/dns-message"
-    ) {
+    if (method === "POST") {
       const requestBody = await request.arrayBuffer();
 
       // Anti-GFW
       if (
-        isIPv4(ip) &&
-        headers.get("accept") === "application/dns-message" &&
         headers.get("content-length") === "29" &&
         (headers.get("user-agent") === "Go-http-client/1.1" ||
           headers.get("user-agent") === "Go-http-client/2.0") &&
+        headers.get("accept") === "application/dns-message" &&
+        headers.get("content-type") === "application/dns-message" &&
         (headers.get("accept-encoding") === "gzip, br" ||
           headers.get("accept-encoding") === "gzip")
       ) {
