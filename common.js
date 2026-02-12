@@ -9,10 +9,11 @@ export default async function handler(
 ) {
   if (!dns || dns.length === 0) {
     dns = [
+      "https://dns.google/dns-query",
       "https://8.8.8.8/dns-query",
       "https://8.8.4.4/dns-query",
       "https://[2001:4860:4860::8888]/dns-query",
-      "https://[2001:4860:4860::8888]/dns-query",
+      "https://[2001:4860:4860::8844]/dns-query",
     ];
   } else {
     try {
@@ -26,10 +27,11 @@ export default async function handler(
   }
   if (!api || api.length === 0) {
     api = [
+      "https://dns.google/resolve",
       "https://8.8.8.8/resolve",
       "https://8.8.4.4/resolve",
       "https://[2001:4860:4860::8888]/resolve",
-      "https://[2001:4860:4860::8888]/resolve",
+      "https://[2001:4860:4860::8844]/resolve",
     ];
   } else {
     try {
@@ -73,6 +75,13 @@ export default async function handler(
                 "User-Agent":
                   "Dohna-NS (https://github.com/LittleChest/Dohna-NS)",
               },
+            }).then((res) => {
+              if (res.status !== 200) {
+                throw new Error(
+                  `Failed to connect to ${server}: ${res.status} ${res.statusText}`,
+                );
+              }
+              return res;
             }),
           ),
         );
@@ -89,7 +98,7 @@ export default async function handler(
                   "Dohna-NS (https://github.com/LittleChest/Dohna-NS)",
               },
             });
-            break;
+            if (res.status === 200) break;
           } catch (e) {
             console.warn(`Failed to connect to ${server}: ${e.message}`);
             continue;
@@ -189,7 +198,16 @@ async function queryDns(
   if (concurrent) {
     try {
       res = await Promise.any(
-        dns.map((server) => fetchUpstream(server, ip, newQueryData)),
+        dns.map((server) =>
+          fetchUpstream(server, ip, newQueryData).then((res) => {
+            if (res.status !== 200) {
+              throw new Error(
+                `Failed to connect to ${server}: ${res.status} ${res.statusText}`,
+              );
+            }
+            return res;
+          }),
+        ),
       );
     } catch (e) {
       console.error("All upstream DNS over HTTPS servers failed: " + e.message);
@@ -201,7 +219,7 @@ async function queryDns(
       const server = servers.splice(index, 1)[0];
       try {
         res = await fetchUpstream(server, ip, newQueryData);
-        break;
+        if (res.status === 200) break;
       } catch (e) {
         console.warn(`Failed to connect to ${server}: ${e.message}`);
         continue;
