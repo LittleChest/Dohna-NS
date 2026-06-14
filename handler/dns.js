@@ -45,85 +45,78 @@ export default async function handler(
   }
 
   const { method, headers, url } = request;
-  const { search, searchParams, pathname } = new URL(url);
+  const { search, searchParams } = new URL(url);
 
   const ip =
     rawIP ||
     headers.get("x-forwarded-for").split(",")[0].trim() ||
     headers.get("x-real-ip");
 
-  let res = new Response(null, { status: 404 });
+  let res = new Response(null, { status: 400 });
 
   // JSON API
-  if (pathname === "/resolve") {
-    res = new Response(null, { status: 400 });
-
-    if (method === "GET" && searchParams.has("name")) {
-      if (concurrent) {
-        res = await Promise.any(
-          api.map((server) =>
-            fetch(server + search, {
-              method: "GET",
-              headers: {
-                "User-Agent":
-                  "Dohna-NS (https://github.com/LittleChest/Dohna-NS)",
-              },
-            }).then((res) => {
-              if (res.status !== 200) {
-                throw new Error(
-                  `Failed to connect to ${server}: ${res.status} ${res.statusText}`,
-                );
-              }
-              return res;
-            }),
-          ),
-        );
-      } else {
-        const servers = [...api];
-        while (servers.length > 0) {
-          const index = Math.floor(Math.random() * servers.length);
-          const server = servers.splice(index, 1)[0];
-          try {
-            res = await fetch(server + search, {
-              method: "GET",
-              headers: {
-                "User-Agent":
-                  "Dohna-NS (https://github.com/LittleChest/Dohna-NS)",
-              },
-            });
-            if (res.status === 200) break;
-          } catch (e) {
-            console.warn(`Failed to connect to ${server}: ${e.message}`);
-            continue;
-          }
+  if (method === "GET" && searchParams.has("name")) {
+    if (concurrent) {
+      res = await Promise.any(
+        api.map((server) =>
+          fetch(server + search, {
+            method: "GET",
+            headers: {
+              "User-Agent":
+                "Dohna-NS (https://github.com/LittleChest/Dohna-NS)",
+            },
+          }).then((res) => {
+            if (res.status !== 200) {
+              throw new Error(
+                `Failed to connect to ${server}: ${res.status} ${res.statusText}`,
+              );
+            }
+            return res;
+          }),
+        ),
+      );
+    } else {
+      const servers = [...api];
+      while (servers.length > 0) {
+        const index = Math.floor(Math.random() * servers.length);
+        const server = servers.splice(index, 1)[0];
+        try {
+          res = await fetch(server + search, {
+            method: "GET",
+            headers: {
+              "User-Agent":
+                "Dohna-NS (https://github.com/LittleChest/Dohna-NS)",
+            },
+          });
+          if (res.status === 200) break;
+        } catch (e) {
+          console.warn(`Failed to connect to ${server}: ${e.message}`);
+          continue;
         }
-        console.error("All upstream JSON API servers failed.");
-        res = new Response(null, { status: 500 });
       }
+      console.error("All upstream JSON API servers failed.");
+      res = new Response(null, { status: 500 });
     }
   }
 
   // DNS Query
-  if (pathname === "/dns-query") {
-    res = new Response(null, { status: 400 });
+  let queryData;
 
-    let queryData;
+  // GET
+  if (method === "GET" && searchParams.has("dns")) {
+    // Decode the base64-encoded DNS query
+    try {
+      const decodedQuery = atob(searchParams.get("dns"));
+      queryData = new Uint8Array(decodedQuery.length);
+      for (let i = 0; i < decodedQuery.length; i++) {
+        queryData[i] = decodedQuery.charCodeAt(i);
+      }
+    } catch {}
+  }
 
-    // GET
-    if (method === "GET" && searchParams.has("dns")) {
-      // Decode the base64-encoded DNS query
-      try {
-        const decodedQuery = atob(searchParams.get("dns"));
-        queryData = new Uint8Array(decodedQuery.length);
-        for (let i = 0; i < decodedQuery.length; i++) {
-          queryData[i] = decodedQuery.charCodeAt(i);
-        }
-      } catch {}
-    }
-
-    // POST
-    if (method === "POST") {
-      const requestBody = await request.arrayBuffer();
+  // POST
+  if (method === "POST") {
+    const requestBody = await request.arrayBuffer();
 
       // Anti-GFW
       if (
@@ -148,16 +141,15 @@ export default async function handler(
       queryData = new Uint8Array(requestBody);
     }
 
-    if (queryData) {
-      res = await queryDns(
-        queryData,
-        ip,
-        dns,
-        ipv4Prefix,
-        ipv6Prefix,
-        concurrent,
-      );
-    }
+  if (queryData) {
+    res = await queryDns(
+      queryData,
+      ip,
+      dns,
+      ipv4Prefix,
+      ipv6Prefix,
+      concurrent,
+    );
   }
 
   return res;

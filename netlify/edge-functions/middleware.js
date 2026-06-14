@@ -1,4 +1,4 @@
-import handler from "../../common.js";
+import handler from "../../handler/dns.js";
 export default async (request) =>
   handler(
     request,

@@ -1,4 +1,4 @@
-import handler from "./common";
+import handler from "./handler/dns";
 
 export default middleware = async (request) => {
   return handler(

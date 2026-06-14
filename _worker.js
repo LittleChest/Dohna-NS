@@ -1,4 +1,4 @@
-import handler from "./common";
+import handler from "./handler/dns";
 
 export default {
   fetch: async (request, env) =>
