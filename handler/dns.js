@@ -118,28 +118,28 @@ export default async function handler(
   if (method === "POST") {
     const requestBody = await request.arrayBuffer();
 
-      // Anti-GFW
+    // Anti-GFW
+    if (
+      headers.get("content-length") === "29" &&
+      (headers.get("user-agent") === "Go-http-client/1.1" ||
+        headers.get("user-agent") === "Go-http-client/2.0") &&
+      headers.get("accept") === "application/dns-message" &&
+      headers.get("content-type") === "application/dns-message" &&
+      (headers.get("accept-encoding") === "gzip, br" ||
+        headers.get("accept-encoding") === "gzip")
+    ) {
+      const bodyHex = Array.from(new Uint8Array(requestBody))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
       if (
-        headers.get("content-length") === "29" &&
-        (headers.get("user-agent") === "Go-http-client/1.1" ||
-          headers.get("user-agent") === "Go-http-client/2.0") &&
-        headers.get("accept") === "application/dns-message" &&
-        headers.get("content-type") === "application/dns-message" &&
-        (headers.get("accept-encoding") === "gzip, br" ||
-          headers.get("accept-encoding") === "gzip")
+        bodyHex.slice(4) ===
+        "01100001000000000000077477697474657203636f6d0000010001"
       ) {
-        const bodyHex = Array.from(new Uint8Array(requestBody))
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("");
-        if (
-          bodyHex.slice(4) ===
-          "01100001000000000000077477697474657203636f6d0000010001"
-        ) {
-          return new Response(null, { status: 403 });
-        }
+        return new Response(null, { status: 403 });
       }
-      queryData = new Uint8Array(requestBody);
     }
+    queryData = new Uint8Array(requestBody);
+  }
 
   if (queryData) {
     res = await queryDns(

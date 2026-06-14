@@ -8,5 +8,6 @@ export default async (request) =>
     Netlify.env.get("IPV6_PREFIX"),
     Netlify.env.get("CONCURRENT"),
     Netlify.context.ip,
+    Netlify.env.get("ENABLE_MOBILE_CONFIG"),
   );
 export const config = { path: "*" };

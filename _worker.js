@@ -10,5 +10,6 @@ export default {
       env.IPV6_PREFIX,
       env.CONCURRENT,
       request.headers.get("cf-connecting-ip"),
+      env.ENABLE_MOBILE_CONFIG,
     ),
 };
